@@ -21,7 +21,7 @@ class WorkerTaskProcessor(
             // 2. Validate and analyze the class
             val workerInterface = findWorkerInterface(workerClass)
             if (workerInterface == null) {
-                logger.error("The @WorkflowWorker annotation must be on a class that implements the Worker interface.", workerClass)
+                logger.error("The @WorkflowTask annotation must be on a class that implements the Worker interface.", workerClass)
                 return@forEach
             }
 
@@ -34,13 +34,25 @@ class WorkerTaskProcessor(
     private fun findWorkerInterface(workerClass: KSClassDeclaration): KSType? {
         // This logic finds the Worker<I, O> interface
         return workerClass.superTypes.map { it.resolve() }
-            .firstOrNull { (it.declaration as? KSClassDeclaration)?.qualifiedName?.asString() == "com.mycorp.workflow.Worker" }
+            .firstOrNull { (it.declaration as? KSClassDeclaration)?.qualifiedName?.asString() == "com.mycorp.dsl.Worker" }
     }
 
     private fun generateDescriptor(workerClass: KSClassDeclaration, workerInterface: KSType) {
         val packageName = workerClass.packageName.asString()
         val workerClassName = workerClass.simpleName.asString()
         val descriptorName = "${workerClassName}_Descriptor"
+
+        val annotation: KSAnnotation = workerClass.annotations.first {
+            it.shortName.asString() == WorkerTask::class.simpleName
+        }
+
+        val nameArgument = annotation.arguments.find { it.name?.asString() == "name" }
+        val providedName = nameArgument?.value as? String ?: ""
+        val finalTaskName = if (providedName.isNotBlank()) providedName else workerClassName
+
+        val descriptionArgument = annotation.arguments.find { it.name?.asString() == "description" }
+        val description = descriptionArgument?.value as? String ?: ""
+
 
         // 4. Extract all the necessary information
         val inputType = workerInterface.arguments[0].type!!.resolve().toClassName()
@@ -51,8 +63,22 @@ class WorkerTaskProcessor(
         // 5. Build the file using KotlinPoet
         val fileSpec = FileSpec.builder(packageName, descriptorName)
             .addType(TypeSpec.objectBuilder(descriptorName)
-                .addSuperinterface(ClassName("com.mycorp.workflow", "WorkerDescriptor"))
+                .addSuperinterface(ClassName("com.mycorp.dsl", "WorkerDescriptor"))
                 // Add properties like taskName, inputType, outputType, etc.
+                .addProperty(
+                    PropertySpec.builder("name", String::class, KModifier.OVERRIDE)
+                        .initializer("%S", finalTaskName)
+                        .build()
+                )
+                .addProperty(
+                    PropertySpec.builder(
+                        "workerType",
+                        KClass::class.asTypeName().parameterizedBy(workerClass.toClassName()),
+                        KModifier.OVERRIDE
+                    )
+                        .initializer("%T::class", workerClass.toClassName()) // %T formats the value as a Type
+                        .build()
+                )
                 .addProperty(PropertySpec.builder("inputType", KClass::class.asTypeName().parameterizedBy(STAR))
                     .initializer("%T::class", inputType)
                     .addModifiers(KModifier.OVERRIDE)
@@ -61,7 +87,6 @@ class WorkerTaskProcessor(
                     .initializer("%T::class", outputType)
                     .addModifiers(KModifier.OVERRIDE)
                     .build())
-                // ... etc ...
                 .build())
             .build()
 
