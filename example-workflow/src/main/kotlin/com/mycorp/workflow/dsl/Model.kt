@@ -1,6 +1,6 @@
 package com.mycorp.workflow.dsl
 
-import com.mycorp.workflow.task.Task
+import com.mycorp.dsl.Worker
 import kotlin.reflect.KClass
 
 sealed interface State {
@@ -8,7 +8,7 @@ sealed interface State {
     val type: String
 }
 
-data class TaskState<T : Task<*, *>>(
+data class TaskState<T : Worker<*, *>>(
     override val name: String,
     val workerClass: KClass<T>,
     override val type: String = "Task",

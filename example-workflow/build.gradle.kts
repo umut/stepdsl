@@ -1,6 +1,14 @@
+description = "example-workflow"
+
 plugins {
     kotlin("jvm") version "2.0.21"
     id("com.google.devtools.ksp") version "2.1.21-2.0.1"
+}
+
+sourceSets{
+    main {
+        kotlin.srcDir("$buildDir/generated/ksp/main/kotlin")
+    }
 }
 
 dependencies {
@@ -15,5 +23,3 @@ dependencies {
     testImplementation(libs.org.jetbrains.kotlin.kotlin.test)
     ksp(project(":processor"))
 }
-
-description = "example-workflow"

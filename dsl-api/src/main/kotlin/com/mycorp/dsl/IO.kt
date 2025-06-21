@@ -1,4 +1,4 @@
-package com.mycorp.workflow.messages
+package com.mycorp.dsl
 
 /**
  * Marker interface for message passing between step functions, CDK uses the

@@ -1,7 +1,6 @@
 package com.mycorp.workflow.messages
 
-import software.amazon.awscdk.services.ec2.Instance
-import java.time.Instant
+import com.mycorp.dsl.IO
 
 data class Order(
     val orderId : Long,

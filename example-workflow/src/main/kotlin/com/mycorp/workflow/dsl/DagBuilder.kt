@@ -1,7 +1,9 @@
 package com.mycorp.workflow.dsl
 
-import com.mycorp.workflow.messages.IO
-import com.mycorp.workflow.task.Task
+import com.mycorp.dsl.Worker
+import com.mycorp.workflow.ProcessOrderTaskDescriptor
+import com.mycorp.dsl.IO
+import com.mycorp.dsl.WorkerNode
 import com.mycorp.workflow.util.GenericsUtils
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
@@ -21,10 +23,13 @@ class DagBuilder {
         return state
     }
 
-    fun <I : IO, O : IO, T : Task<I, O>> task(name: String, workerClass: KClass<T>): TaskNode {
+    fun <I : IO, O : IO, T : Worker<I, O>> task(name: String, workerClass: KClass<T>): TaskNode {
         if (!graph.containsKey(name)) {
             graph[name] = TaskState(name, workerClass)
         }
+
+        println(ProcessOrderTaskDescriptor.type)
+
         return TaskNode(name, this)
     }
 

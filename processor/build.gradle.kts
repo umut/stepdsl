@@ -1,3 +1,5 @@
+description = "processor"
+
 plugins {
     kotlin("jvm") version "2.0.21"
 }
@@ -9,5 +11,3 @@ dependencies {
     api(libs.com.squareup.kotlinpoet)
     api(libs.com.squareup.kotlinpoet.ksp)
 }
-
-description = "processor"
