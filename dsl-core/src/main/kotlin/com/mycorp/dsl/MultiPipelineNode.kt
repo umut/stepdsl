@@ -1,6 +1,6 @@
 package com.mycorp.dsl
 
-class MultiPipelineNode<A : IO, C : IO>(public val head: Node<A, *>, public val tail: Node<*, C>) :
+class MultiPipelineNode<A : IO, C : IO>(val head: Node<A, *>, val tail: Node<*, C>) :
     PipelineNode<A, C>() {
 
     override fun <D : IO> next(next: Node<C, D>): PipelineNode<A, D> {
