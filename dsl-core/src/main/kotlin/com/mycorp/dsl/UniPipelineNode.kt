@@ -18,6 +18,10 @@ class UniPipelineNode<A: IO, B: IO>(val node: Node<A, B>) : PipelineNode<A, B>()
         }
     }
 
+    override fun name(): String {
+        throw IllegalStateException("Not supposed to be called.")
+    }
+
     override fun toString() : String {
         return node.toString()
     }

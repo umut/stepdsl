@@ -22,6 +22,10 @@ class MultiPipelineNode<A : IO, C : IO>(val head: Node<A, *>, val tail: Node<*, 
         }
     }
 
+    override fun name(): String {
+        throw IllegalStateException("Not supposed to be called.")
+    }
+
     override fun toString() : String {
         return head.toString()
     }
