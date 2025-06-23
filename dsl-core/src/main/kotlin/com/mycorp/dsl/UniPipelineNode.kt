@@ -5,14 +5,17 @@ class UniPipelineNode<A: IO, B: IO>(val node: Node<A, B>) : PipelineNode<A, B>()
         when (next) {
             is UniPipelineNode -> {
                 this.node.next = next.node
+                next.node.prev = this.node
                 return MultiPipelineNode(node, next)
             }
             is MultiPipelineNode -> {
                 this.node.next = next.head
+                next.head.prev = this.node
                 return MultiPipelineNode(node, next.tail)
             }
             else -> {
                 this.node.next = next
+                next.prev = this.node
                 return MultiPipelineNode(node, next)
             }
         }

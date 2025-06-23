@@ -14,6 +14,8 @@ class WorkerTaskProcessor(
     private val logger: KSPLogger
 ) : SymbolProcessor {
 
+    val names = mutableSetOf<String>()
+
     override fun process(resolver: Resolver): List<KSAnnotated> {
         // 1. Find all classes with WorkerTask annotation
         val symbols = resolver.getSymbolsWithAnnotation(WorkerTask::class.qualifiedName!!)
@@ -58,6 +60,11 @@ class WorkerTaskProcessor(
         val nameArgument = annotation.arguments.find { it.name?.asString() == "name" }
         val nameValue = nameArgument?.value as? String ?: ""
         val nameFinalValue = nameValue.ifBlank { workerClassName }
+        if (names.contains(nameFinalValue)) {
+            throw IllegalStateException("Name $nameFinalValue is used for nmore than one Worker.")
+        } else {
+            names.add(nameFinalValue)
+        }
 
         val descriptionArgument = annotation.arguments.find { it.name?.asString() == "description" }
         val descriptionFinalValue = descriptionArgument?.value as? String ?: ""
@@ -75,6 +82,11 @@ class WorkerTaskProcessor(
                     .addProperty(
                         PropertySpec.builder("name", String::class, KModifier.OVERRIDE)
                             .initializer("%S", nameFinalValue)
+                            .build()
+                    )
+                    .addProperty(
+                        PropertySpec.builder("description", String::class, KModifier.OVERRIDE)
+                            .initializer("%S", descriptionFinalValue)
                             .build()
                     )
                     .addProperty(

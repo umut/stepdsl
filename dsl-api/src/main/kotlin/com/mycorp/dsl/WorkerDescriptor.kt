@@ -7,6 +7,7 @@ import kotlin.reflect.KClass
  */
 interface WorkerDescriptor<A: IO, B: IO> {
     val name: String
+    val description: String
     val type: KClass<out Worker<*, *>>
     val inputType: KClass<*>
     val outputType: KClass<*>
