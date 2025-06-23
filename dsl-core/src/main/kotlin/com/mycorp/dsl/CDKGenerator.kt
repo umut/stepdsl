@@ -2,27 +2,42 @@ package com.mycorp.dsl
 
 import software.amazon.awscdk.Stack
 import software.amazon.awscdk.services.lambda.Code
+import software.amazon.awscdk.services.stepfunctions.DefinitionBody
+import software.amazon.awscdk.services.stepfunctions.INextable
 import software.amazon.awscdk.services.stepfunctions.State
+import software.amazon.awscdk.services.stepfunctions.StateMachine
 import software.amazon.awscdk.services.stepfunctions.Succeed
 import software.amazon.awscdk.services.stepfunctions.tasks.LambdaInvoke
 
 class CDKGenerator(private val stack: Stack) {
 
-    val lambdas = mutableMapOf<String, software.amazon.awscdk.services.lambda.Function>()
-    val states = mutableMapOf<String, State>()
+    private val lambdas = mutableMapOf<String, software.amazon.awscdk.services.lambda.Function>()
+    private val states = mutableMapOf<String, State>()
 
     fun generate(startNode: Node<*, *>) {
         discoverWorkers(startNode, mutableSetOf())
-        //wireAll(startNode, mutableSetOf<String>(), lambdas)
+        wireAllNodes(startNode, mutableSetOf())
+
+        StateMachine.Builder.create(stack, "MyDslStateMachine")
+            .stateMachineName("MyDslWorkflowFromDsl")
+            .definitionBody(DefinitionBody.fromChainable(states[startNode.name()]!!))
+            .build()
     }
 
-    private fun wireAll(node: Node<*, *>, visited: MutableSet<String>,
-                        lambdas: Map<String, software.amazon.awscdk.services.lambda.Function>) {
+    private fun wireAllNodes(node: Node<*, *>, visited: MutableSet<String>) {
         if (node.name() in visited) return
         visited.add(node.name())
 
+        val sourceState = states[node.name()]
+
         when (node) {
-            is LambdaWorkerNode<*, *> -> createLambdaState(node)
+            is LambdaWorkerNode<*, *> -> {
+                node.next?.let { nextNode ->
+                    (sourceState as INextable).next(states[nextNode.name()]!!)
+                    wireAllNodes(nextNode, visited)
+                }
+            }
+            // implement later, Choice, etc
             else -> throw IllegalStateException("Unsupported node")
         }
     }
